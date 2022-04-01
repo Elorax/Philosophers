@@ -182,7 +182,7 @@ int	prendage_fork_one(t_philo *philo, struct timeval *time)
 	pthread_mutex_lock(philo->mut_end);
 	if (philo->end)
 	{
-		pthread_mutex_unlock(philo->fork[philo->nb - 1].mut);
+		//pthread_mutex_unlock(philo->fork[philo->nb - 1].mut);
 		pthread_mutex_unlock(philo->mut_end);
 		return (0);
 	}
@@ -203,7 +203,7 @@ int	prendage_fork_two(t_philo *philo, struct timeval *time)
 	pthread_mutex_lock(philo->mut_end);
 	if (philo->end)
 	{
-		pthread_mutex_unlock(philo->fork[philo->nb % philo->nb_philo].mut);
+		//pthread_mutex_unlock(philo->fork[philo->nb % philo->nb_philo].mut);
 		pthread_mutex_unlock(philo->mut_end);
 		return (0);
 	}
@@ -246,6 +246,7 @@ int	lachage_fork_one(t_philo *philo, struct timeval *time)
 	if (philo->end)
 	{
 		pthread_mutex_unlock(philo->mut_end);
+		pthread_mutex_unlock(philo->fork[philo->nb - 1].mut);
 		return (0);
 	}
 	pthread_mutex_unlock(philo->mut_end);
@@ -266,6 +267,7 @@ int	lachage_fork_two(t_philo *philo, struct timeval *time)
 	if (philo->end)
 	{
 		pthread_mutex_unlock(philo->mut_end);
+		pthread_mutex_unlock(philo->fork[philo->nb % philo->nb_philo].mut);
 		return (0);
 	}
 	pthread_mutex_unlock(philo->mut_end);
@@ -458,14 +460,18 @@ int	main(int ac, char **av)
 	ret = pthread_create(&data.death_thread, NULL, death_checker, &data);
 	i = -1;
 	pthread_join(data.death_thread, NULL);
-	pthread_mutex_destroy(&data.print);
+	while (++i < data.nb_philo)
+	{
+		pthread_join(data.threads[i], NULL);
+		//gerer erreurs
+	}
+	i = -1;
 	while (++i < data.nb_philo)
 	{
 		pthread_mutex_destroy(data.fork[i].mut);
 		free(data.fork[i].mut);
-		pthread_join(data.threads[i], NULL);
-		//gerer erreurs
 	}
+	pthread_mutex_destroy(&data.print);
 	free(time);
 	free(data.philo);
 	free(data.fork);
