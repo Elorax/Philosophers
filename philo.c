@@ -13,50 +13,6 @@
 #include "philo.h"
 #include <sys/time.h>
 
-typedef struct s_fork
-{
-	int				nb;
-	pthread_mutex_t	*mut;
-}	t_fork;
-
-typedef struct s_philo
-{
-	int				nb;
-	int				nb_philo;
-	int				time_to_eat;
-	int				time_to_sleep;
-	int				time_to_die;
-	struct timeval	*tv;
-	struct timeval	*tvi;
-	int				eaten;
-	int				to_eat;
-	int				state;
-	int				end;
-	pthread_mutex_t	*print;
-	pthread_mutex_t	*mut_end;
-	pthread_mutex_t	*mut_time;
-	t_fork			*fork;
-}	t_philo;
-
-enum {thinking, eating, sleeping};
-
-typedef struct s_data
-{
-	int				nb_philo;
-	int				end;
-	int				time_to_die;
-	int				time_to_eat;
-	int				time_to_sleep;
-	t_philo			*philo;
-	t_fork			*fork;
-	pthread_t		*threads;
-	pthread_t		death_thread;
-	pthread_mutex_t	print;
-	pthread_mutex_t	mut_end;
-	pthread_mutex_t	mut_nb_philo;
-	pthread_mutex_t	mut_time;
-}	t_data;
-
 int	ft_diff_time(struct timeval *t1, struct timeval *t2)
 {
 	int	diff;
@@ -112,7 +68,6 @@ void	*death_checker(void *param)
 		pthread_mutex_unlock(&data->mut_end);
 		i = 0;
 		gettimeofday(time, NULL);
-		//pthread_mutex_lock(&data->print);
 		pthread_mutex_lock(&data->mut_end);
 		while (i < data->nb_philo && !data->end)
 		{
@@ -182,9 +137,8 @@ int	prendage_fork_one(t_philo *philo, struct timeval *time)
 	pthread_mutex_lock(philo->mut_end);
 	if (philo->end)
 	{
-		//pthread_mutex_unlock(philo->fork[philo->nb - 1].mut);
 		pthread_mutex_unlock(philo->mut_end);
-		return (0);
+		return (1);
 	}
 	pthread_mutex_unlock(philo->mut_end);
 	pthread_mutex_lock(philo->print);
@@ -203,9 +157,8 @@ int	prendage_fork_two(t_philo *philo, struct timeval *time)
 	pthread_mutex_lock(philo->mut_end);
 	if (philo->end)
 	{
-		//pthread_mutex_unlock(philo->fork[philo->nb % philo->nb_philo].mut);
 		pthread_mutex_unlock(philo->mut_end);
-		return (0);
+		return (1);
 	}
 	pthread_mutex_unlock(philo->mut_end);
 	pthread_mutex_lock(philo->print);
@@ -225,7 +178,7 @@ int	mangeage(t_philo *philo, struct timeval *time)
 	if (philo->end)
 	{
 		pthread_mutex_unlock(philo->mut_end);
-		return (0);
+		return (1);
 	}
 	pthread_mutex_unlock(philo->mut_end);
 	pthread_mutex_lock(philo->print);
@@ -247,7 +200,7 @@ int	lachage_fork_one(t_philo *philo, struct timeval *time)
 	{
 		pthread_mutex_unlock(philo->mut_end);
 		pthread_mutex_unlock(philo->fork[philo->nb - 1].mut);
-		return (0);
+		return (1);
 	}
 	pthread_mutex_unlock(philo->mut_end);
 	pthread_mutex_lock(philo->print);
@@ -268,7 +221,7 @@ int	lachage_fork_two(t_philo *philo, struct timeval *time)
 	{
 		pthread_mutex_unlock(philo->mut_end);
 		pthread_mutex_unlock(philo->fork[philo->nb % philo->nb_philo].mut);
-		return (0);
+		return (1);
 	}
 	pthread_mutex_unlock(philo->mut_end);
 	pthread_mutex_lock(philo->print);
@@ -312,6 +265,22 @@ int	dormissage(t_philo *philo, struct timeval *time)
 	return (1);
 }
 
+void	boucle_philo(t_philo *philo, struct timeval *time)
+{
+	pthread_mutex_unlock(philo->mut_end);
+	pensage(philo, time);
+	attendage(philo);
+	if (philo->nb % 2)
+		prendage_fork_one(philo, time) && prendage_fork_two(philo, time);
+	else
+		prendage_fork_two(philo, time) && prendage_fork_one(philo, time);
+	mangeage(philo, time);
+	lachage_fork_one(philo, time);
+	lachage_fork_two(philo, time);
+	dormissage(philo, time);
+	pthread_mutex_lock(philo->mut_end);
+}
+
 void	*ft_philo(void *param)
 {
 	struct timeval	*time;
@@ -324,34 +293,7 @@ void	*ft_philo(void *param)
 	pthread_mutex_lock(philo->mut_end);
 	while ((philo->to_eat == -1
 			|| philo->eaten < philo->to_eat) && philo->end == 0)
-	{
-		pthread_mutex_unlock(philo->mut_end);
-		pensage(philo, time);
-		attendage(philo);
-		if (philo->nb % 2)
-		{
-			prendage_fork_one(philo, time);
-			prendage_fork_two(philo, time);
-		}
-		else
-		{
-			prendage_fork_two(philo, time);
-			prendage_fork_one(philo, time);
-		}
-		mangeage(philo, time);
-		if (philo->nb % 2)
-		{
-			lachage_fork_one(philo, time);
-			lachage_fork_two(philo, time);
-		}
-		else
-		{
-			lachage_fork_two(philo, time);
-			lachage_fork_one(philo, time);
-		}
-		dormissage(philo, time);
-		pthread_mutex_lock(philo->mut_end);
-	}
+		boucle_philo(philo, time);
 	pthread_mutex_unlock(philo->mut_end);
 	time = (free(time), NULL);
 	pthread_mutex_lock(philo->mut_time);
@@ -428,7 +370,6 @@ int	main(int ac, char **av)
 	{
 		data.philo[i].fork = data.fork;
 		data.philo[i].nb_philo = number_of_philosophers;
-		data.philo[i].state = thinking;
 		data.philo[i].end = 0;
 		data.philo[i].time_to_die = data.time_to_die;
 		data.philo[i].time_to_eat = data.time_to_eat;
@@ -446,9 +387,7 @@ int	main(int ac, char **av)
 	while (++i < data.nb_philo)
 	{
 		gettimeofday(data.philo[i].tv, NULL);
-		//Peut etre pas NULL
 		ret = pthread_create(&(data.threads[i]), NULL, ft_philo, &data.philo[i]);
-		//ret = 0;
 		if (ret != 0)
 		{
 			printf("Error %d\n", i);
