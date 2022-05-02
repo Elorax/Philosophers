@@ -6,7 +6,7 @@
 /*   By: abiersoh <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/01 16:48:58 by abiersoh          #+#    #+#             */
-/*   Updated: 2022/05/02 17:52:14 by abiersoh         ###   ########.fr       */
+/*   Updated: 2022/05/02 19:53:38 by abiersoh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,16 +153,6 @@ int	prendage_fork_one(t_philo *philo, struct timeval *time)
 
 int	prendage_fork_two(t_philo *philo, struct timeval *time)
 {
-	if (philo->nb_philo == 1)
-	{
-		gettimeofday(time, NULL);
-		while (ft_diff_time(data->philo[i].tv, time) > data->philo[i].time_to_die)
-		{
-			gettimeofday(time, NULL);
-			usleep(2000);
-		}
-		pthread_mutex_unlock(philo->fork[0]);
-	}
 	pthread_mutex_lock(philo->fork[philo->nb % philo->nb_philo].mut);
 	pthread_mutex_lock(philo->mut_end);
 	if (philo->end)
@@ -295,6 +285,21 @@ void	boucle_philo(t_philo *philo, struct timeval *time)
 	pthread_mutex_lock(philo->mut_end);
 }
 
+void	handle_solo_philo(t_philo *philo, struct timeval *time)
+{
+	pensage(philo, time);
+	prendage_fork_one(philo, time);
+	pthread_mutex_lock(philo->mut_end);
+	while (philo->end == 0)
+	{
+		pthread_mutex_unlock(philo->mut_end);
+		usleep(2000);
+		pthread_mutex_lock(philo->mut_end);
+	}
+	pthread_mutex_unlock(philo->mut_end);
+	lachage_fork_one(philo, time);
+}
+
 void	*ft_philo(void *param)
 {
 	struct timeval	*time;
@@ -304,11 +309,16 @@ void	*ft_philo(void *param)
 	time = malloc(sizeof(struct timeval));
 	if (time == NULL)
 		return (NULL);
-	pthread_mutex_lock(philo->mut_end);
-	while ((philo->to_eat == -1
-			|| philo->eaten < philo->to_eat) && philo->end == 0)
-		boucle_philo(philo, time);
-	pthread_mutex_unlock(philo->mut_end);
+	if (philo->nb_philo == 1)
+		handle_solo_philo(philo, time);
+	else
+	{
+		pthread_mutex_lock(philo->mut_end);
+		while ((philo->to_eat == -1
+				|| philo->eaten < philo->to_eat) && philo->end == 0)
+			boucle_philo(philo, time);
+		pthread_mutex_unlock(philo->mut_end);
+	}
 	time = (free(time), NULL);
 	pthread_mutex_lock(philo->mut_time);
 	philo->tv = (free(philo->tv), NULL);
@@ -349,6 +359,8 @@ int	main(int ac, char **av)
 	struct timeval	*time;
 
 	
+	//Check nb arg
+
 	if (ac < 5 || ac > 6)
 		return(printf("Mauvais nombre d'arguments\n"), 0);
 
@@ -361,15 +373,19 @@ int	main(int ac, char **av)
 	data.time_to_die = ft_atoi(av[2]);
 	data.time_to_eat = ft_atoi(av[3]);
 	data.time_to_sleep = ft_atoi(av[4]);
+	if (ac == 6)
+		number_of_times_each_philosopher_must_eat = atoi(av[5]);
+	else
+		number_of_times_each_philosopher_must_eat = -1;
+	if (number_of_times_each_philosopher_must_eat < 1)
+		return (0);
+
+	//Verification valeurs variables
 
 	if (data.nb_philo < 1 || data.time_to_die < 50 || data.time_to_eat < 50 || data.time_to_sleep < 50 )
 		return (printf("Incorrect values. Please give at least one philosopher and 50 ms per action.\n"), 0);
 
 
-	if (ac == 6)
-		number_of_times_each_philosopher_must_eat = atoi(av[5]);
-	else
-		number_of_times_each_philosopher_must_eat = -1;
 	time = malloc(sizeof(struct timeval));
 	if (!time)
 		return (1);
