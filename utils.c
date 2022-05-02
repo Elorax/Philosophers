@@ -6,7 +6,7 @@
 /*   By: abiersoh <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/01 16:48:58 by abiersoh          #+#    #+#             */
-/*   Updated: 2022/05/02 17:52:14 by abiersoh         ###   ########.fr       */
+/*   Updated: 2022/03/06 17:22:02 by abiersoh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,16 +153,6 @@ int	prendage_fork_one(t_philo *philo, struct timeval *time)
 
 int	prendage_fork_two(t_philo *philo, struct timeval *time)
 {
-	if (philo->nb_philo == 1)
-	{
-		gettimeofday(time, NULL);
-		while (ft_diff_time(data->philo[i].tv, time) > data->philo[i].time_to_die)
-		{
-			gettimeofday(time, NULL);
-			usleep(2000);
-		}
-		pthread_mutex_unlock(philo->fork[0]);
-	}
 	pthread_mutex_lock(philo->fork[philo->nb % philo->nb_philo].mut);
 	pthread_mutex_lock(philo->mut_end);
 	if (philo->end)
@@ -278,6 +268,7 @@ void	boucle_philo(t_philo *philo, struct timeval *time)
 {
 	pthread_mutex_unlock(philo->mut_end);
 	pensage(philo, time);
+	attendage(philo);
 	if (philo->nb % 2)
 	{
 		prendage_fork_one(philo, time);
@@ -348,10 +339,14 @@ int	main(int ac, char **av)
 	int				ret = 0;
 	struct timeval	*time;
 
+	//Initiation des mutex
 	
 	if (ac < 5 || ac > 6)
 		return(printf("Mauvais nombre d'arguments\n"), 0);
-
+	pthread_mutex_init(&data.print, NULL);
+	pthread_mutex_init(&data.mut_nb_philo, NULL);
+	pthread_mutex_init(&data.mut_end, NULL);
+	pthread_mutex_init(&data.mut_time, NULL);
 
 	//Lecture des arguments et initialisation de variables
 	data.nb_philo = ft_atoi(av[1]);
@@ -361,11 +356,6 @@ int	main(int ac, char **av)
 	data.time_to_die = ft_atoi(av[2]);
 	data.time_to_eat = ft_atoi(av[3]);
 	data.time_to_sleep = ft_atoi(av[4]);
-
-	if (data.nb_philo < 1 || data.time_to_die < 50 || data.time_to_eat < 50 || data.time_to_sleep < 50 )
-		return (printf("Incorrect values. Please give at least one philosopher and 50 ms per action.\n"), 0);
-
-
 	if (ac == 6)
 		number_of_times_each_philosopher_must_eat = atoi(av[5]);
 	else
@@ -385,13 +375,6 @@ int	main(int ac, char **av)
 	if (!data.threads)
 		return(free(data.philo), free(data.fork), free(time), EXIT_FAILURE);
 	i = -1;
-	//Initiation des mutex
-
-	pthread_mutex_init(&data.print, NULL);
-	pthread_mutex_init(&data.mut_nb_philo, NULL);
-	pthread_mutex_init(&data.mut_end, NULL);
-	pthread_mutex_init(&data.mut_time, NULL);
-
 	while (++i < data.nb_philo)
 	{
 		data.fork[i].nb = 0;
