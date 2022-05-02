@@ -173,7 +173,6 @@ int	prendage_fork_two(t_philo *philo, struct timeval *time)
 
 int	mangeage(t_philo *philo, struct timeval *time)
 {
-
 	pthread_mutex_lock(philo->mut_end);
 	if (philo->end)
 	{
@@ -271,9 +270,15 @@ void	boucle_philo(t_philo *philo, struct timeval *time)
 	pensage(philo, time);
 	attendage(philo);
 	if (philo->nb % 2)
-		prendage_fork_one(philo, time) && prendage_fork_two(philo, time);
+	{
+		prendage_fork_one(philo, time);
+		prendage_fork_two(philo, time);
+	}
 	else
-		prendage_fork_two(philo, time) && prendage_fork_one(philo, time);
+	{
+		prendage_fork_two(philo, time);
+		prendage_fork_one(philo, time);
+	}
 	mangeage(philo, time);
 	lachage_fork_one(philo, time);
 	lachage_fork_two(philo, time);
@@ -312,6 +317,18 @@ int	ft_atoi(char *s)
 	return (ret);
 }
 
+void	free_tv(t_philo *philo, int n)
+{
+	int	i;
+
+	i = 0;
+	while (i < n)
+	{
+		free(philo[i].tv);
+		i++;
+	}
+}
+
 int	main(int ac, char **av)
 {
 	//Declarations
@@ -320,7 +337,6 @@ int	main(int ac, char **av)
 	t_data			data;
 	int				i;
 	int				ret = 0;
-	pthread_mutex_t	print;
 	struct timeval	*time;
 
 	//Initiation des mutex
@@ -336,6 +352,7 @@ int	main(int ac, char **av)
 	data.nb_philo = ft_atoi(av[1]);
 	number_of_philosophers = data.nb_philo;
 	data.end = 0;
+	data.crash = 0;
 	data.time_to_die = ft_atoi(av[2]);
 	data.time_to_eat = ft_atoi(av[3]);
 	data.time_to_sleep = ft_atoi(av[4]);
@@ -362,6 +379,8 @@ int	main(int ac, char **av)
 	{
 		data.fork[i].nb = 0;
 		data.fork[i].mut = malloc(sizeof(pthread_mutex_t));
+		if (data.fork[i].mut == NULL)
+			data.crash = 1;
 		pthread_mutex_init(data.fork[i].mut, NULL);
 	}
 	i = -1;
@@ -378,10 +397,23 @@ int	main(int ac, char **av)
 		data.philo[i].mut_end = &data.mut_end;
 		data.philo[i].mut_time = &data.mut_time;
 		data.philo[i].tv = malloc(sizeof(struct timeval));
+		if (data.philo[i].tv == NULL)
+		{
+			free_tv(data.philo, i);
+			data.crash = 1;
+		}
 		data.philo[i].nb = i + 1;
 		data.philo[i].eaten = 0;
 		data.philo[i].to_eat = number_of_times_each_philosopher_must_eat;
 		data.philo[i].tvi = time;
+	}
+	if (data.crash)
+	{
+		free(time);
+		free(data.philo);
+		free(data.fork);
+		free(data.threads);
+		exit(EXIT_FAILURE);
 	}
 	i = -1;
 	while (++i < data.nb_philo)
@@ -400,10 +432,7 @@ int	main(int ac, char **av)
 	i = -1;
 	pthread_join(data.death_thread, NULL);
 	while (++i < data.nb_philo)
-	{
 		pthread_join(data.threads[i], NULL);
-		//gerer erreurs
-	}
 	i = -1;
 	while (++i < data.nb_philo)
 	{

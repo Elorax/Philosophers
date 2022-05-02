@@ -36,6 +36,7 @@ typedef struct	s_data
 	int				time_to_die;
 	int				time_to_eat;
 	int				time_to_sleep;
+	int				crash;
 	t_philo			*philo;
 	t_fork			*fork;
 	pthread_t		*threads;
@@ -53,6 +54,7 @@ int	ft_diff_time(struct timeval *t1, struct timeval *t2);
 void	check_finish(t_data *data);
 
 void	*death_checker(void *param);//A normer
+void	free_tv(t_philo *philo, int n);
 
 int	pensage(t_philo *philo, struct timeval *time);
 int	attendage(t_philo *philo);
