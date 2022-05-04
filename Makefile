@@ -5,7 +5,7 @@ OBJS		=	$(SRCS:.c=.o)
 
 CC			=	gcc
 
-CFLAGS		=	-Wall -Wextra -Werror -pthread -fsanitize=thread
+CFLAGS		=	-Wall -Wextra -Werror -g -pthread #-fsanitize=thread
 
 NAME		=	Philosophers
 

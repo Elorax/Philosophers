@@ -6,7 +6,7 @@
 /*   By: abiersoh <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/01 16:48:58 by abiersoh          #+#    #+#             */
-/*   Updated: 2022/05/03 05:41:31 by abiersoh         ###   ########.fr       */
+/*   Updated: 2022/05/04 04:11:55 by abiersoh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,24 +53,25 @@ void	check_finish(t_data *data)
 	i = -1;
 	while (++i < data->nb_philo)
 	{
-		pthread_mutex_lock(&data->mut_end);
+		//pthread_mutex_lock(&data->mut_end);
 		if (!data->philo[i].end)
 		{
-			pthread_mutex_unlock(&data->mut_end);
+			//pthread_mutex_unlock(&data->mut_end);
 			break ;
 		}
-			pthread_mutex_unlock(&data->mut_end);
+			//pthread_mutex_unlock(&data->mut_end);
 	}
 	if (i == data->nb_philo)
 		data->end = 1;
 	i = -1;
 	if (data->end == 1)
 	{
-		pthread_mutex_lock(&data->mut_end);
+		//pthread_mutex_lock(&data->mut_end);
 		while (++i < data->nb_philo)
 			data->philo[i].end = 1;
-		pthread_mutex_unlock(&data->mut_end);
+		//pthread_mutex_unlock(&data->mut_end);
 	}
+	pthread_mutex_unlock(&data->mut_end);
 }
 
 void	*death_checker(void *param)
@@ -106,10 +107,10 @@ void	*death_checker(void *param)
 				pthread_mutex_unlock(&data->mut_time);
 				pthread_mutex_lock(&data->print);
 				pthread_mutex_lock(&data->mut_time);
+				pthread_mutex_lock(&data->mut_end);
 				printf("%d ms : Philosopher %d died : didn't eat for %d ms\n", ft_diff_time(data->philo[i].tvi, time), data->philo[i].nb, ft_diff_time(data->philo[i].tv, time));
 				pthread_mutex_unlock(&data->mut_time);
 				pthread_mutex_unlock(&data->print);
-				pthread_mutex_lock(&data->mut_end);
 				data->end = 1;
 				break ;
 			}
@@ -117,7 +118,7 @@ void	*death_checker(void *param)
 			i++;
 			pthread_mutex_lock(&data->mut_end);
 		}
-		pthread_mutex_unlock(&data->mut_end);
+		//pthread_mutex_unlock(&data->mut_end);
 		check_finish(data);
 		usleep(2000);
 		pthread_mutex_lock(&data->mut_end);
@@ -134,7 +135,7 @@ int	pensage(t_philo *philo, struct timeval *time)
 		pthread_mutex_unlock(philo->mut_end);
 		return (0);
 	}
-	pthread_mutex_unlock(philo->mut_end);
+	//pthread_mutex_unlock(philo->mut_end);
 	pthread_mutex_lock(philo->print);
 	pthread_mutex_lock(philo->mut_time);
 	gettimeofday(time, NULL);
@@ -142,6 +143,7 @@ int	pensage(t_philo *philo, struct timeval *time)
 		ft_diff_time(philo->tvi, time), philo->nb);
 	pthread_mutex_unlock(philo->mut_time);
 	pthread_mutex_unlock(philo->print);
+	pthread_mutex_unlock(philo->mut_end);
 	return (1);
 }
 
@@ -161,7 +163,7 @@ int	prendage_fork_one(t_philo *philo, struct timeval *time)
 		pthread_mutex_unlock(philo->mut_end);
 		return (1);
 	}
-	pthread_mutex_unlock(philo->mut_end);
+//	pthread_mutex_unlock(philo->mut_end);
 	pthread_mutex_lock(philo->print);
 	pthread_mutex_lock(philo->mut_time);
 	gettimeofday(time, NULL);
@@ -169,6 +171,7 @@ int	prendage_fork_one(t_philo *philo, struct timeval *time)
 		ft_diff_time(philo->tvi, time), philo->nb, philo->nb - 1);
 	pthread_mutex_unlock(philo->mut_time);
 	pthread_mutex_unlock(philo->print);
+	pthread_mutex_unlock(philo->mut_end);
 	return (1);
 }
 
@@ -181,7 +184,7 @@ int	prendage_fork_two(t_philo *philo, struct timeval *time)
 		pthread_mutex_unlock(philo->mut_end);
 		return (1);
 	}
-	pthread_mutex_unlock(philo->mut_end);
+	//pthread_mutex_unlock(philo->mut_end);
 	pthread_mutex_lock(philo->print);
 	pthread_mutex_lock(philo->mut_time);
 	gettimeofday(time, NULL);
@@ -189,6 +192,7 @@ int	prendage_fork_two(t_philo *philo, struct timeval *time)
 		ft_diff_time(philo->tvi, time), philo->nb, philo->nb % philo->nb_philo);
 	pthread_mutex_unlock(philo->mut_time);
 	pthread_mutex_unlock(philo->print);
+	pthread_mutex_unlock(philo->mut_end);
 	return (1);
 }
 
@@ -200,7 +204,7 @@ int	mangeage(t_philo *philo, struct timeval *time)
 		pthread_mutex_unlock(philo->mut_end);
 		return (1);
 	}
-	pthread_mutex_unlock(philo->mut_end);
+	//pthread_mutex_unlock(philo->mut_end);
 	pthread_mutex_lock(philo->print);
 	pthread_mutex_lock(philo->mut_time);
 	gettimeofday(philo->tv, NULL);
@@ -208,6 +212,7 @@ int	mangeage(t_philo *philo, struct timeval *time)
 		ft_diff_time(philo->tvi, time), philo->nb);
 	pthread_mutex_unlock(philo->mut_time);
 	pthread_mutex_unlock(philo->print);
+	pthread_mutex_unlock(philo->mut_end);
 	philo->eaten++;
 	ft_msleep(philo->time_to_eat, philo);
 //	usleep(philo->time_to_eat * 1000);
@@ -223,7 +228,7 @@ int	lachage_fork_one(t_philo *philo, struct timeval *time)
 		pthread_mutex_unlock(philo->fork[philo->nb - 1].mut);
 		return (1);
 	}
-	pthread_mutex_unlock(philo->mut_end);
+	//pthread_mutex_unlock(philo->mut_end);
 	pthread_mutex_lock(philo->print);
 	pthread_mutex_lock(philo->mut_time);
 	gettimeofday(time, NULL);
@@ -231,6 +236,7 @@ int	lachage_fork_one(t_philo *philo, struct timeval *time)
 		ft_diff_time(philo->tvi, time), philo->nb, philo->nb - 1);
 	pthread_mutex_unlock(philo->mut_time);
 	pthread_mutex_unlock(philo->print);
+	pthread_mutex_unlock(philo->mut_end);
 	pthread_mutex_unlock(philo->fork[philo->nb - 1].mut);
 	return (1);
 }
@@ -244,7 +250,7 @@ int	lachage_fork_two(t_philo *philo, struct timeval *time)
 		pthread_mutex_unlock(philo->fork[philo->nb % philo->nb_philo].mut);
 		return (1);
 	}
-	pthread_mutex_unlock(philo->mut_end);
+	//pthread_mutex_unlock(philo->mut_end);
 	pthread_mutex_lock(philo->print);
 	pthread_mutex_lock(philo->mut_time);
 	gettimeofday(time, NULL);
@@ -252,6 +258,7 @@ int	lachage_fork_two(t_philo *philo, struct timeval *time)
 		ft_diff_time(philo->tvi, time), philo->nb, philo->nb % philo->nb_philo);
 	pthread_mutex_unlock(philo->mut_time);
 	pthread_mutex_unlock(philo->print);
+	pthread_mutex_unlock(philo->mut_end);
 	pthread_mutex_unlock(philo->fork[philo->nb % philo->nb_philo].mut);
 	return (1);
 }
@@ -264,7 +271,7 @@ int	dormissage(t_philo *philo, struct timeval *time)
 		pthread_mutex_unlock(philo->mut_end);
 		return (0);
 	}
-	pthread_mutex_unlock(philo->mut_end);
+	//pthread_mutex_unlock(philo->mut_end);
 	pthread_mutex_lock(philo->print);
 	pthread_mutex_lock(philo->mut_time);
 	gettimeofday(time, NULL);
@@ -276,6 +283,7 @@ int	dormissage(t_philo *philo, struct timeval *time)
 	else
 		printf("\n");
 	pthread_mutex_unlock(philo->print);
+	pthread_mutex_unlock(philo->mut_end);
 	if (philo->eaten == philo->to_eat)
 	{
 		pthread_mutex_lock(philo->mut_end);
@@ -286,12 +294,28 @@ int	dormissage(t_philo *philo, struct timeval *time)
 	return (1);
 }
 
+int	can_wait(t_philo *philo, struct timeval *time, int nb_cycle)
+{
+	int tmp;
+	tmp = nb_cycle * philo->time_to_eat + 5;
+	gettimeofday(time, NULL);
+	if ((philo->time_to_die - ft_diff_time(philo->tv, time)) > tmp)
+		return (1);
+	return (0);
+}
+
 void	boucle_philo(t_philo *philo, struct timeval *time)
 {
 	pthread_mutex_unlock(philo->mut_end);
 	pensage(philo, time);
+	attendage(philo);
 	if (philo->nb % 2)
 	{
+		if (can_wait(philo, time, 1))
+		{
+			printf("philosopher %d can wait a bit...\n", philo->nb);
+			ft_msleep(2, philo);
+		}
 		prendage_fork_one(philo, time);
 		prendage_fork_two(philo, time);
 	}
@@ -301,8 +325,18 @@ void	boucle_philo(t_philo *philo, struct timeval *time)
 		prendage_fork_one(philo, time);
 	}
 	mangeage(philo, time);
-	lachage_fork_one(philo, time);
-	lachage_fork_two(philo, time);
+	if (philo->nb % 2)
+	{
+		if (can_wait(philo, time, 1))
+			ft_msleep(2, philo);
+		lachage_fork_one(philo, time);
+		lachage_fork_two(philo, time);
+	}
+	else
+	{
+		lachage_fork_two(philo, time);
+		lachage_fork_one(philo, time);
+	}
 	dormissage(philo, time);
 	pthread_mutex_lock(philo->mut_end);
 }
@@ -399,7 +433,7 @@ int	main(int ac, char **av)
 		number_of_times_each_philosopher_must_eat = atoi(av[5]);
 	else
 		number_of_times_each_philosopher_must_eat = -1;
-	if (number_of_times_each_philosopher_must_eat < 1)
+	if (number_of_times_each_philosopher_must_eat == 0)
 		return (0);
 
 	//Verification valeurs variables
