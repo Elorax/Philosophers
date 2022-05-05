@@ -1,5 +1,12 @@
-SRCS		=	philo.c		\
-				#utils.c
+SRCS		=	philo.c				\
+				arg_handlers.c		\
+				ft_atoi.c			\
+				death_checker.c		\
+				routine.c			\
+				steps1.c			\
+				steps2.c			\
+				threads_handlers.c	\
+				timers.c
 
 OBJS		=	$(SRCS:.c=.o)
 

@@ -1,35 +1,44 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   philo.c                                            :+:      :+:    :+:   */
+/*   ft_atoi.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: abiersoh <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/01 16:48:58 by abiersoh          #+#    #+#             */
-/*   Updated: 2022/05/05 21:15:28 by abiersoh         ###   ########.fr       */
+/*   Updated: 2022/05/05 19:53:09 by abiersoh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 #include <sys/time.h>
 
-int	main(int ac, char **av)
+int	ft_atoi(char *s)
 {
-	t_data			data;
-	struct timeval	*time;
+	int	ret;
 
-	read_args(ac);
-	set_data(ac, av, &data);
-	verif_input(ac, av, &data);
-	time = malloc(sizeof(struct timeval));
-	if (!time)
-		return (1);
-	allocate(&data, time);
-	init_mutex(&data, time);
-	init_philo(&data, time);
-	quit_crash(&data, time);
-	create_threads(&data);
-	join_threads(&data);
-	destroy_data_mutex(&data, time);
-	return (0);
+	ret = 0;
+	while (*s >= '0' && *s <= '9')
+		ret = ret * 10 + (*s++ - 48);
+	return (ret);
+}
+
+int	is_arg_valid(char *s)
+{
+	long long int	res;
+
+	while (*s && (*s == '\f' || *s == '\t' || *s == '\n'
+			|| *s == '\r' || *s == '\v' || *s == ' '))
+		s++;
+	if (!(*s))
+		return (0);
+	res = 0;
+	while ((*s && *s >= '0' && *s <= '9'))
+	{
+		res = (res * 10) + (*s - '0');
+		if (res > 2147483647)
+			return (0);
+		s++;
+	}
+	return (*s == 0);
 }
