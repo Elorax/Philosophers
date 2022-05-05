@@ -6,7 +6,7 @@
 /*   By: abiersoh <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/01 16:48:58 by abiersoh          #+#    #+#             */
-/*   Updated: 2022/05/04 23:03:04 by abiersoh         ###   ########.fr       */
+/*   Updated: 2022/05/05 15:13:42 by abiersoh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,25 @@ void	ft_msleep(int msec, t_philo *philo)
 		pthread_mutex_unlock(philo->mut_end);
 		gettimeofday(&t2, NULL);
 	}
+}
+
+int	is_arg_valid(char *s)
+{
+	long long int	res;
+
+	while (*s && (*s == '\f' || *s == '\t' || *s == '\n' || *s == '\r' || *s == '\v' || *s == ' '))
+		s++;
+	if (!(*s))
+		return (0);
+	res = 0;
+	while ((*s && *s >= '0' && *s <= '9'))
+	{
+		res = (res * 10) + (*s - '0');
+		if (res > 2147483647)
+			return (0);
+		s++;
+	}
+	return (*s == 0);
 }
 
 int	ft_diff_time(struct timeval *t1, struct timeval *t2)
@@ -107,9 +126,9 @@ void	*death_checker(void *param)
 			if (ft_diff_time(data->philo[i].tv, time) > data->philo[i].time_to_die)
 			{
 				pthread_mutex_unlock(&data->mut_time);
+				pthread_mutex_lock(&data->mut_end);
 				pthread_mutex_lock(&data->print);
 				pthread_mutex_lock(&data->mut_time);
-				pthread_mutex_lock(&data->mut_end);
 				printf("%d ms : Philosopher %d died : didn't eat for %d ms\n", ft_diff_time(data->philo[i].tvi, time), data->philo[i].nb, ft_diff_time(data->philo[i].tv, time));
 				pthread_mutex_unlock(&data->mut_time);
 				pthread_mutex_unlock(&data->print);
@@ -435,15 +454,16 @@ int	main(int ac, char **av)
 		number_of_times_each_philosopher_must_eat = atoi(av[5]);
 	else
 		number_of_times_each_philosopher_must_eat = -1;
-	if (number_of_times_each_philosopher_must_eat == 0)
-		return (0);
 
 	//Verification valeurs variables
 
-	if (data.nb_philo < 1 || data.time_to_die < 50 || data.time_to_eat < 50 || data.time_to_sleep < 50 )
+	if (data.nb_philo < 1 || data.nb_philo > 200 || data.time_to_die < 130 || data.time_to_eat < 60 || data.time_to_sleep < 60)
 		return (printf("Incorrect values. Please give at least one philosopher and 50 ms per action.\n"), 0);
-
-
+	if (!(is_arg_valid(av[1]) && is_arg_valid(av[2]) && is_arg_valid(av[3]) && is_arg_valid(av[4]) && 
+		((ac == 6 && is_arg_valid(av[5])) || ac == 5)))
+		return (printf("Incorrect values.\n"), 0);
+	if (number_of_times_each_philosopher_must_eat == 0)
+		return (0);
 	time = malloc(sizeof(struct timeval));
 	if (!time)
 		return (1);
