@@ -6,7 +6,7 @@
 /*   By: abiersoh <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/01 16:48:58 by abiersoh          #+#    #+#             */
-/*   Updated: 2022/05/04 04:11:55 by abiersoh         ###   ########.fr       */
+/*   Updated: 2022/05/04 23:03:04 by abiersoh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,9 +18,11 @@ void	ft_msleep(int msec, t_philo *philo)
 	struct timeval t1;
 	struct timeval t2;
 
+	if (msec < 0)
+		return ;
 	gettimeofday(&t1, NULL);
 	gettimeofday(&t2, NULL);
-	while (ft_diff_time(&t1, &t2) < msec)
+	while (ft_diff_time(&t1, &t2) <= msec)
 	{
 		usleep (100);
 		pthread_mutex_lock(philo->mut_end);
@@ -135,7 +137,6 @@ int	pensage(t_philo *philo, struct timeval *time)
 		pthread_mutex_unlock(philo->mut_end);
 		return (0);
 	}
-	//pthread_mutex_unlock(philo->mut_end);
 	pthread_mutex_lock(philo->print);
 	pthread_mutex_lock(philo->mut_time);
 	gettimeofday(time, NULL);
@@ -144,13 +145,21 @@ int	pensage(t_philo *philo, struct timeval *time)
 	pthread_mutex_unlock(philo->mut_time);
 	pthread_mutex_unlock(philo->print);
 	pthread_mutex_unlock(philo->mut_end);
+	if (philo->eaten > 0 && philo->nb_philo % 2)
+		ft_msleep(philo->time_to_eat * 2 - philo->time_to_sleep, philo);
 	return (1);
 }
 
 int	attendage(t_philo *philo)
 {
-	if (philo->nb % 2 && philo->eaten == 0)
-		ft_msleep(philo->time_to_eat, philo);
+	if (philo->nb_philo % 2)
+	{
+		if (philo->eaten == 0)
+			ft_msleep(philo->time_to_eat * (philo->nb % 3), philo);
+	}
+	else
+		if (philo->nb % 2 && philo->eaten == 0)
+			ft_msleep(philo->time_to_eat, philo);
 	return (1);
 }
 
@@ -311,11 +320,6 @@ void	boucle_philo(t_philo *philo, struct timeval *time)
 	attendage(philo);
 	if (philo->nb % 2)
 	{
-		if (can_wait(philo, time, 1))
-		{
-			printf("philosopher %d can wait a bit...\n", philo->nb);
-			ft_msleep(2, philo);
-		}
 		prendage_fork_one(philo, time);
 		prendage_fork_two(philo, time);
 	}
@@ -327,8 +331,6 @@ void	boucle_philo(t_philo *philo, struct timeval *time)
 	mangeage(philo, time);
 	if (philo->nb % 2)
 	{
-		if (can_wait(philo, time, 1))
-			ft_msleep(2, philo);
 		lachage_fork_one(philo, time);
 		lachage_fork_two(philo, time);
 	}
