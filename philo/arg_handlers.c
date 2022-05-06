@@ -6,7 +6,7 @@
 /*   By: abiersoh <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/01 16:48:58 by abiersoh          #+#    #+#             */
-/*   Updated: 2022/05/05 21:34:04 by abiersoh         ###   ########.fr       */
+/*   Updated: 2022/05/06 15:39:11 by abiersoh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ int	allocate(t_data *data, struct timeval *time)
 
 int	verif_input(int ac, char **av, t_data *data)
 {
-	if (data->nb_philo < 1 || data->nb_philo > 200 || data->time_to_die < 130
+	if (data->nb_philo < 1 || data->nb_philo > 200000 || data->time_to_die < 130
 		|| data->time_to_eat < 60 || data->time_to_sleep < 60)
 		exit((printf("Incorrect values.\n"), 0));
 	if (!(is_arg_valid(av[1]) && is_arg_valid(av[2])
