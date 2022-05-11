@@ -6,14 +6,14 @@
 /*   By: abiersoh <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/01 16:48:58 by abiersoh          #+#    #+#             */
-/*   Updated: 2022/05/05 21:33:23 by abiersoh         ###   ########.fr       */
+/*   Updated: 2022/05/11 19:48:41 by abiersoh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 #include <sys/time.h>
 
-int	destroy_data_mutex(t_data *data, struct timeval *time)
+int	destroy_data_mutex(t_data *data)
 {
 	int	i;
 
@@ -24,7 +24,6 @@ int	destroy_data_mutex(t_data *data, struct timeval *time)
 		free(data->fork[i].mut);
 	}
 	pthread_mutex_destroy(&data->print);
-	free(time);
 	free(data->philo);
 	free(data->fork);
 	free(data->threads);
@@ -56,24 +55,20 @@ int	create_threads(t_data *data)
 				ft_philo, &data->philo[i]);
 		if (ret != 0)
 		{
-			printf("Error %d\n", i);
-			//	break;
-			//Tout detruire et return.
-			exit(EXIT_FAILURE);
+			data->crash = i;
+			break ;
 		}
 	}
 	ret = pthread_create(&data->death_thread, NULL, death_checker, data);
-	//A verifier
+	if (ret != 0)
+		data->crash = 1;
 	return (0);
 }
 
-int	quit_crash(t_data *data, struct timeval *time)
+int	quit_crash(t_data *data)
 {
-	//Quit if malloc crash
-	//a tester en faisant peter le 10e malloc et philo = 20 par exemple.
 	if (data->crash)
 	{
-		free(time);
 		free(data->philo);
 		free(data->fork);
 		free(data->threads);

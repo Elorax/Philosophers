@@ -6,7 +6,7 @@
 /*   By: abiersoh <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/01 16:48:58 by abiersoh          #+#    #+#             */
-/*   Updated: 2022/05/05 21:17:37 by abiersoh         ###   ########.fr       */
+/*   Updated: 2022/05/11 19:37:59 by abiersoh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,24 +52,20 @@ void	handle_solo_philo(t_philo *philo, struct timeval *time)
 
 void	*ft_philo(void *param)
 {
-	struct timeval	*time;
+	struct timeval	time;
 	t_philo			*philo;
 
 	philo = (t_philo *) param;
-	time = malloc(sizeof(struct timeval));
-	if (time == NULL)
-		return (NULL);
 	if (philo->nb_philo == 1)
-		handle_solo_philo(philo, time);
+		handle_solo_philo(philo, &time);
 	else
 	{
 		pthread_mutex_lock(philo->mut_end);
 		while ((philo->to_eat == -1
 				|| philo->eaten < philo->to_eat) && philo->end == 0)
-			boucle_philo(philo, time);
+			boucle_philo(philo, &time);
 		pthread_mutex_unlock(philo->mut_end);
 	}
-	time = (free(time), NULL);
 	pthread_mutex_lock(philo->mut_time);
 	philo->tv = (free(philo->tv), NULL);
 	pthread_mutex_unlock(philo->mut_time);

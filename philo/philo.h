@@ -6,7 +6,7 @@
 /*   By: abiersoh <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/05 21:29:28 by abiersoh          #+#    #+#             */
-/*   Updated: 2022/05/05 21:33:37 by abiersoh         ###   ########.fr       */
+/*   Updated: 2022/05/11 19:44:22 by abiersoh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,9 +94,9 @@ int		verif_input(int ac, char **av, t_data *data);
 int		allocate(t_data *data, struct timeval *time);
 int		init_mutex(t_data *data, struct timeval *time);
 void	init_philo(t_data *data, struct timeval *time);
-int		quit_crash(t_data *data, struct timeval *time);
+int		quit_crash(t_data *data);
 int		create_threads(t_data *data);
 int		join_threads(t_data *data);
-int		destroy_data_mutex(t_data *data, struct timeval *time);
+int		destroy_data_mutex(t_data *data);
 
 #endif
